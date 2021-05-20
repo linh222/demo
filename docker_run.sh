@@ -1,0 +1,1 @@
+docker run -d --name fapi-lead-scoring -p 80:80 fapi-lead-scoring
