@@ -1,0 +1,66 @@
+image:
+  name: registry.gitlab.com/elsacorp/infrastructure/kube-helm/master/ci:1.18.2-3.2.4
+
+variables:
+  HELM_CHART_PATH: deploy/helm
+  HELM_CHART_NAME: lead_scoring_api
+  GPG_PRIV_KEY_PATH: deploy/helm/keys/devops-priv.asc
+  KUBE_NAMESPACE: lead_scoring_api
+  DOCKERFILE: Dockerfile
+  PROJECT: lead_scoring_api
+  IMAGE_NAME: $CI_REGISTRY_IMAGE
+  IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+
+stages:
+  - build
+  - staging
+  - production
+
+
+.deploy_template: &deploy_template
+  script:
+    - deploy/scripts/setup-gpg.sh
+    - deploy/scripts/deploy.sh $ENVIRONMENT
+
+build:
+  stage: build
+  image: docker:latest
+#  only:
+#    changes:
+#      - Dockerfile
+#      - Pipfile
+#      - Pipfile.lock
+#      - src/__init__.py  # Bump version
+  services:
+    - docker:dind
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+  script:
+    - deploy/scripts/build.sh
+#    - - docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:$CI_COMMIT_SHORT_SHA
+#        - docker push $IMAGE_NAME:$CI_COMMIT_SHORT_SHA
+#
+#        - docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
+#        - docker push $IMAGE_NAME:latest
+
+staging:
+  <<: *deploy_template
+  stage: staging
+  variables:
+    environment: staging
+  environment: staging
+  when: manual
+
+production:
+  <<: *deploy_template
+  stage: production
+  variables:
+    environment: production
+  environment: production
+  when: manual
+  allow_failure: false
+  only:
+    - master
+    - /^[0-9]+\.[0-9]+(?:\.[0-9])?/
+    - /^hotfix\/.*$/
+    - /^release\/.*$/
