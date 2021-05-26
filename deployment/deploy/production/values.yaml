@@ -7,17 +7,14 @@ ingress:
       paths:
         - /
 
-variables:
-
 resources:
   requests:
     cpu: 100m
     memory: 200M
 
-
 image:
   repository: registry.gitlab.com/elsacorp/data-science/lead-scoring-backend
-  tag: ""
+  tag: "production-latest"
   ## values: Always or IfNotPresent
   pullPolicy: Always
   pullSecret: gitlab-registry
