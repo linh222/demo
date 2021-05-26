@@ -9,7 +9,7 @@ ENV PYTHONOPTIMIZE=2
 
 COPY ./app /app
 COPY requirements.txt /app/
-COPY .env /app/
+# COPY .env /app/
 
 WORKDIR /app
 
