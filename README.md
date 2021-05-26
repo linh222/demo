@@ -2,7 +2,6 @@
 - [LEAD SCORING BACKEND](#lead-scoring-backend)
   - [Folder Structure](#folder-structure)
     - [app](#app-define-api)
-    - [model](#model-scoring-model)
 - [API](#api)
   - [Setup for develop](#setup-for-develop)
     - [Docker Local env](#docker-Local-env)
@@ -23,11 +22,9 @@ Store API & config base on FastAPI framework:
 - routers.py: Define routers into APIs.
 - api_key.py: Define security process apply to each apis need access token.
 - test: Define test case for API. Base on module `TestClient` and `pytest`
-- apis: Defines APIs supported by service
-### model Scoring Model
-- raw_data: Store data raw.
-- training_data: Data for training model.
-- train.py: Source code training model & predict.
+- apis: Defines APIs supported by service.
+- models: Models of lead-scoring-backend
+- training: Training data and scripts
 
 
 # API
