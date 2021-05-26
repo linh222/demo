@@ -22,6 +22,9 @@ stages:
 
 .test_template: &test_template
   image: registry.gitlab.com/elsacorp/data-science/lead-scoring-backend:$CI_COMMIT_SHA
+  variables:
+    API_KEY: 1234
+    API_KEY_NAME: api_key
   script:
     - pip install -r requirements.txt
     - flake8
