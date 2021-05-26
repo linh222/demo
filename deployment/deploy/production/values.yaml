@@ -18,3 +18,10 @@ image:
   ## values: Always or IfNotPresent
   pullPolicy: Always
   pullSecret: gitlab-registry
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
