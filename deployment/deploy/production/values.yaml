@@ -1,0 +1,23 @@
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: traefik
+  hosts:
+    - host: lead-scoring-api-dp-prod.elsanow.co
+      paths:
+        - /
+
+variables:
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 200M
+
+
+image:
+  repository: registry.gitlab.com/elsacorp/data-science/lead-scoring-backend
+  tag: ""
+  ## values: Always or IfNotPresent
+  pullPolicy: Always
+  pullSecret: gitlab-registry

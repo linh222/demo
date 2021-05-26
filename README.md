@@ -23,8 +23,7 @@ Store API & config base on FastAPI framework:
 - routers.py: Define routers into APIs.
 - api_key.py: Define security process apply to each apis need access token.
 - test: Define test case for API. Base on module `TestClient` and `pytest`
-- info: Define API get info about Server health, API info
-- predict: Define API predict lead scoring.
+- apis: Defines APIs supported by service
 ### model Scoring Model
 - raw_data: Store data raw.
 - training_data: Data for training model.
@@ -37,6 +36,12 @@ Provide API for model predict Lead Scoring. Using FastAPI framework for implemen
 Home page docs: https://fastapi.tiangolo.com/
 
 ## Setup for develop
+
+### Setup env vars from .env_dev template
+```
+cp .env_dev .env
+```
+
 ### Docker Local env
 - Setup docker.
 - Build docker image from Docker files.

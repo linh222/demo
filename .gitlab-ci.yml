@@ -2,65 +2,125 @@ image:
   name: registry.gitlab.com/elsacorp/infrastructure/kube-helm/master/ci:1.18.2-3.2.4
 
 variables:
-  HELM_CHART_PATH: deploy/helm
-  HELM_CHART_NAME: lead_scoring_api
-  GPG_PRIV_KEY_PATH: deploy/helm/keys/devops-priv.asc
-  KUBE_NAMESPACE: lead_scoring_api
-  DOCKERFILE: Dockerfile
-  PROJECT: lead_scoring_api
-  IMAGE_NAME: $CI_REGISTRY_IMAGE
-  IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+  KUBE_NAMESPACE: dp-lead-scoring-backend
+  GPG_PRIV_KEY_PATH: deployment/deploy/keys/devops-priv.asc
+  HELM_CHART_PATH: deployment
+  HELM_CHART_NAME: lead-scoring-backend
+  PROJECT: lead-scoring-backend
 
 stages:
-  - build
-  - staging
-  - production
+  - build_dev
+  - test_dev
 
+  - build_stag
+  - test_stag
+  - deploy_stag
+
+  - build_prod
+  - test_prod
+  - deploy_prod
+
+.test_template: &test_template
+  image: registry.gitlab.com/elsacorp/data-science/lead-scoring-backend:$CI_COMMIT_SHA
+  script:
+    - pip install -r requirements.txt
+    - flake8
+    - pytest
+
+.build_template: &build_template
+  script:
+    - ./deployment/scripts/build.sh
 
 .deploy_template: &deploy_template
   script:
-    - deploy/scripts/setup-gpg.sh
-    - deploy/scripts/deploy.sh $ENVIRONMENT
+    - ./deployment/scripts/setup-gpg.sh
+    - ./deployment/scripts/deploy.sh
 
-build:
-  stage: build
-  image: docker:latest
-#  only:
-#    changes:
-#      - Dockerfile
-#      - Pipfile
-#      - Pipfile.lock
-#      - src/__init__.py  # Bump version
+# Test stages
+build_dev:
+  <<: *build_template
+  stage: build_dev
+  image: docker:git
   services:
     - docker:dind
   variables:
+    DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
-  script:
-    - deploy/scripts/build.sh
-#    - - docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:$CI_COMMIT_SHORT_SHA
-#        - docker push $IMAGE_NAME:$CI_COMMIT_SHORT_SHA
-#
-#        - docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
-#        - docker push $IMAGE_NAME:latest
+    ENVIRONMENT: test
+  when: manual
 
-staging:
+test_dev:
+  <<: *test_template
+  stage: test_dev
+  needs: [build_dev]
+
+# Staging stages
+build_stag:
+  <<: *build_template
+  stage: build_stag
+  image: docker:git
+  services:
+    - docker:dind
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+    ENVIRONMENT: staging
+  when: manual
+  only:
+    - master
+
+test_stag:
+  <<: *test_template
+  stage: test_stag
+  needs: [build_stag]
+  only:
+    - master
+
+deploy_stag:
   <<: *deploy_template
-  stage: staging
+  stage: deploy_stag
   variables:
     environment: staging
   environment: staging
-  when: manual
+  needs: [test_stag]
+  only:
+    - master
 
-production:
+# Production stages
+build_prod:
+  <<: *build_template
+  stage: build_prod
+  image: docker:git
+  services:
+    - docker:dind
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+    ENVIRONMENT: production
+  when: manual
+  only:
+    - /^[0-9]+\.[0-9]+(?:\.[0-9])?/
+    - /^hotfix\/.*$/
+    - /^release\/.*$/
+
+test_prod:
+  <<: *test_template
+  stage: test_prod
+  needs: [build_prod]
+  only:
+    - /^[0-9]+\.[0-9]+(?:\.[0-9])?/
+    - /^hotfix\/.*$/
+    - /^release\/.*$/
+
+deploy_prod:
   <<: *deploy_template
-  stage: production
+  stage: deploy_prod
   variables:
     environment: production
   environment: production
-  when: manual
   allow_failure: false
+  needs: [test_prod]
   only:
-    - master
     - /^[0-9]+\.[0-9]+(?:\.[0-9])?/
     - /^hotfix\/.*$/
     - /^release\/.*$/

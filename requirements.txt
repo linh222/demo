@@ -5,3 +5,6 @@ pandas~=1.2.4
 scikit-learn~=0.24.1
 starlette~=0.14.2
 python-dotenv~=0.17.1
+flake8
+requests
+pytest-cov
