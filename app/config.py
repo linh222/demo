@@ -11,6 +11,7 @@ API_KEY = os.environ.get("API_KEY")
 API_KEY_NAME = os.environ.get("API_KEY_NAME")
 SENTRY_DSN = os.environ.get("SENTRY_DSN", '')
 ENVIRONMENT = os.environ.get('ENVIRONMENT', 'dev')
+SENTRY_TRACE_SAMPLE_RATE = float(os.environ.get('SENTRY_TRACE_SAMPLE_RATE', 0))
 
 
 class Settings(BaseSettings):
