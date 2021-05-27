@@ -9,11 +9,12 @@ load_dotenv(dotenv_path)
 
 API_KEY = os.environ.get("API_KEY")
 API_KEY_NAME = os.environ.get("API_KEY_NAME")
+SENTRY_DSN = os.environ.get("SENTRY_DSN", '')
+ENVIRONMENT = os.environ.get('ENVIRONMENT', 'dev')
 
 
 class Settings(BaseSettings):
     app_name: str = "Lead Scoring API"
-    admin_email: str = "hung.le@elsanow.io"
 
 
 settings = Settings()
