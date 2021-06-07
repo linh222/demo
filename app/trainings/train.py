@@ -1,3 +1,4 @@
+import logging
 import pandas as pd
 import numpy as np
 import os
@@ -21,6 +22,8 @@ def get_project_root() -> Path:
 
 
 root_path = get_project_root()
+
+ver_1_0 = '1.0'
 
 
 def load_training_dataset(model_version='1.0'):
@@ -49,7 +52,7 @@ def load_training_dataset(model_version='1.0'):
         + Remarks: please filter all ELSA users from the training dataset as they are noise data that can affect the prediction results.
 
     """
-    if model_version == '1.0':
+    if model_version == ver_1_0:
         Package = ['lifetime_membership',
                    'one_year_credit',
                    'three_months_credit',
@@ -205,7 +208,7 @@ def load_training_dataset(model_version='1.0'):
         label_vector = [1 if i == 'Yes' else 0 for i in list(label_data)]
         return features_data, label_vector
     else:
-        print("The latest base_model has not supported for this version!")
+        logging.info("The latest base_model has not supported for this version!")
         features_data = []
         label_vector = []
         return features_data, label_vector
@@ -243,7 +246,7 @@ def feature_validation(feature_vector, model_version='1.0'):
 
     """
 
-    if model_version == '1.0':
+    if model_version == ver_1_0:
 
         # The default values of chosen features (not Bool variables) in the base_model version 1.0
 
@@ -413,17 +416,18 @@ def feature_validation(feature_vector, model_version='1.0'):
         return validated_feature_vector
 
     else:
-        print("The latest base_model has not supported for this version!")
+        logging.info("The latest base_model has not supported for this version!")
         validated_feature_vector = []
         return validated_feature_vector
 
 
 def model_training(model_version='1.0'):
     """
-        This function is used to train the corresponding base_model based on the chosen version and store the trained one into a Pickle file.
+        This function is used to train the corresponding base_model based on the chosen version
+         and store the trained one into a Pickle file.
     """
 
-    if model_version == '1.0':
+    if model_version == ver_1_0:
         features_data, label_vector = load_training_dataset(model_version)
         if len(features_data):
             X_train = features_data
@@ -432,72 +436,86 @@ def model_training(model_version='1.0'):
             clf = RandomForestClassifier(max_depth=50).fit(features_data, label_vector)
 
             predict_train = clf.predict(X_train)
-            print("Train")
-            print("accuracy: ", accuracy_score(np.array(predict_train), y_train))
-            print("f1 score", f1_score(np.array(predict_train), y_train))
-            print("recall score", recall_score(np.array(predict_train), y_train))
-            print("precision score", precision_score(np.array(predict_train), y_train))
+            logging.info("Train")
+            logging.info("accuracy: ", accuracy_score(np.array(predict_train), y_train))
+            logging.info("f1 score", f1_score(np.array(predict_train), y_train))
+            logging.info("recall score", recall_score(np.array(predict_train), y_train))
+            logging.info("precision score", precision_score(np.array(predict_train), y_train))
 
             # Save to file in the current working directory
-            model_filename = "{}/model/lead_scoring_model_version_{}.pkl".format(root_path, model_version)
+            model_filename = "{}/models/lead_scoring_model_version_{}.pkl".format(root_path, model_version)
             with open(model_filename, 'wb') as file:
                 pickle.dump(clf, file)
-                print("Complete saving the version {} of the lead scoring base_model at the following file: {}".format(
+                logging.info("Complete saving the version {} of the lead scoring base_model at the following file: {}".format(
                     model_version, model_filename))
-                print("--------------------------------------")
+                logging.info("--------------------------------------")
 
     else:
-        print("The latest base_model has not supported for this version!")
+        logging.info("The latest base_model has not supported for this version!")
 
 
-def predict(feature_vectors, model_version='1.0'):
+def validate_feature(feature_vectors, model_version='1.0'):
     """
-        This function is used to predict an arraye of feature vectors using the trained base_model with the chosen version:
+        This function is used to validate list feature vectors with the chosen version:
         - Input data:
             feature_vectors =
     """
-
     if model_version == '1.0':
 
         # Prepare the list of predicted feature vectors after the valdiation step:
-        print("--------------------------------------")
-        print("Doing the validation steps...")
+        logging.info("--------------------------------------")
+        logging.info("Doing the validation steps...")
         predicted_feature_vectors = []
         for feature_vector in feature_vectors:
             validated_feature_vector = feature_validation(feature_vector, model_version)
-            print("Before: {}".format(feature_vector))
-            print("After: {}".format(validated_feature_vector))
+            logging.info("Before: {}".format(feature_vector))
+            logging.info("After: {}".format(validated_feature_vector))
             predicted_feature_vectors.append(validated_feature_vector)
-            print("********************")
+            logging.info("********************")
+        return predicted_feature_vectors
+    else:
+        logging.info("Not supported for this version!")
+        return []
+
+
+def predict(predicted_feature_vectors, model_version='1.0'):
+    """
+        This function is used to predict an arraye of feature vectors using the trained base_model
+        with the chosen version:
+        - Input data:
+            predicted_feature_vectors =
+    """
+
+    if model_version == ver_1_0:
 
         # Load the corresponding base_model trained from file
         model_filename = "{}/models/lead_scoring_model_version_{}.pkl".format(root_path, model_version)
         with open(model_filename, 'rb') as file:
             trained_model = pickle.load(file)
-            print("Complete loading the version {} of the lead scoring base_model from the following file: {}".format(
+            logging.info("Complete loading the version {} of the lead scoring base_model from the following file: {}".format(
                 model_version, model_filename))
-            print("--------------------------------------")
+            logging.info("--------------------------------------")
 
-        print("Starting doing the prediction for all input feature vectors...")
+        logging.info("Starting doing the prediction for all input feature vectors...")
         Results = trained_model.predict_proba(predicted_feature_vectors)
 
         predicted_probability = []
         for result in Results:
             # Return the predicted probability of label = 1 (which means "Converted")
             predicted_probability.append(result[1])
-        print("Completed the prediction for all input feature vectors...")
-        print("--------------------------------------")
+        logging.info("Completed the prediction for all input feature vectors...")
+        logging.info("--------------------------------------")
         return predicted_probability
 
     else:
-        print("The latest base_model has not supported for this version!")
+        logging.info("The latest base_model has not supported for this version!")
         return []
 
 
 if __name__ == "__main__":
 
     # Choose the base_model version:
-    model_version = '1.0'
+    model_version = ver_1_0
 
     # Training the chosen version of the lead scoring base_model:
     model_training(model_version)
@@ -532,11 +550,12 @@ if __name__ == "__main__":
         ]
     ]
 
-    predicted_probability = predict(feature_vectors, model_version='1.0')
-    print("--------------------------------------")
-    print("The predicted probability of the testing feature vectors as:")
+    feature_validated = validate_feature(feature_vectors, model_version='1.0')
+    predicted_probability = predict(feature_validated, model_version='1.0')
+    logging.info("--------------------------------------")
+    logging.info("The predicted probability of the testing feature vectors as:")
     for i in range(0, len(feature_vectors)):
         feature_vector = feature_vectors[i]
-        print("The feature vector: {}".format(feature_vector))
-        print("has the following predicted probability: {}".format(predicted_probability[i]))
-        print("******************")
+        logging.info("The feature vector: {}".format(feature_vector))
+        logging.info("has the following predicted probability: {}".format(predicted_probability[i]))
+        logging.info("******************")

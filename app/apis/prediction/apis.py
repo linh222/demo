@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status
 from fastapi.openapi.models import APIKey
 
 from app.api_key import get_api_key
-from app.trainings.train import predict
+from app.trainings.train import predict, validate_feature
 from .schemas import FeatureModel, ResponseModel
 
 router = APIRouter()
@@ -31,14 +31,16 @@ async def predict_lead_score(feature: FeatureModel, api_key: APIKey = Depends(ge
         feature.browser_type
     ]]
 
-    predicted_probability = predict(feature_input, model_version=model_version)
+    feature_validated = validate_feature(feature_input, model_version=model_version)
+    predicted_probability = predict(feature_validated, model_version=model_version)
     lead_score = float("{:.2f}".format(100 * predicted_probability[0]))
+
     return {
-        "lead_id": feature.lead_id,
-        "lead_score": lead_score,
-        "model_version": model_version,
-        "date": feature.date
-    }
+            "lead_id": feature.lead_id,
+            "lead_score": lead_score,
+            "model_version": model_version,
+            "date": feature.date
+        }
 
 
 def include_router(app):

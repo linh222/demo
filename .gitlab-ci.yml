@@ -13,11 +13,9 @@ stages:
   - test_dev
 
   - build_stag
-  - test_stag
   - deploy_stag
 
   - build_prod
-  - test_prod
   - deploy_prod
 
 .test_template: &test_template
@@ -50,12 +48,15 @@ build_dev:
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
     ENVIRONMENT: test
-  when: manual
+  only:
+    - merge_requests
 
 test_dev:
   <<: *test_template
   stage: test_dev
   needs: [build_dev]
+  only:
+    - merge_requests
 
 # Staging stages
 build_stag:
@@ -72,20 +73,13 @@ build_stag:
   only:
     - master
 
-test_stag:
-  <<: *test_template
-  stage: test_stag
-  needs: [build_stag]
-  only:
-    - master
-
 deploy_stag:
   <<: *deploy_template
   stage: deploy_stag
   variables:
     environment: staging
   environment: staging
-  needs: [test_stag]
+  needs: [build_stag]
   only:
     - master
 
@@ -106,15 +100,6 @@ build_prod:
     - /^hotfix\/.*$/
     - /^release\/.*$/
 
-test_prod:
-  <<: *test_template
-  stage: test_prod
-  needs: [build_prod]
-  only:
-    - /^[0-9]+\.[0-9]+(?:\.[0-9])?/
-    - /^hotfix\/.*$/
-    - /^release\/.*$/
-
 deploy_prod:
   <<: *deploy_template
   stage: deploy_prod
@@ -122,7 +107,7 @@ deploy_prod:
     environment: production
   environment: production
   allow_failure: false
-  needs: [test_prod]
+  needs: [build_prod]
   only:
     - /^[0-9]+\.[0-9]+(?:\.[0-9])?/
     - /^hotfix\/.*$/
