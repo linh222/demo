@@ -32,7 +32,7 @@ class TestPredictionApis(unittest.TestCase):
         assert response.status_code == 200
         assert response.json() == {
             "lead_id": "0001",
-            "lead_score": 6.38,
+            "lead_score": 6.75,
             "date": "2021-05-07",
             "model_version": "1.0"
         }
