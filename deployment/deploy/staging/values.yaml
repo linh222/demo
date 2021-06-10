@@ -10,7 +10,7 @@ ingress:
 resources:
   requests:
     cpu: 100m
-    memory: 200M
+    memory: 300M
 
 image:
   repository: registry.gitlab.com/elsacorp/data-science/lead-scoring-backend
